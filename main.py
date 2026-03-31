@@ -31,26 +31,33 @@ analysis_crew = Crew(
     agents=[analyst, fin_expert],
     tasks=[analyse, advise],
     verbose=True,
+    cache=True,
+    max_rpm=15,
+)
+
+sequential_crew = Crew(
+    agents=[data_explorer, news_info_explorer, analyst, fin_expert],
+    tasks=[get_company_financials, get_company_news, analyse, advise],
+    verbose=True,
     process=Process.sequential,
     cache=True,
     max_rpm=15,
 )
 
-
 def run_crew_task(crew, inputs, task_name):
     """Helper function to run a crew task."""
-    print(f"🚀 Starting {task_name}...")
+    print(f"[START] {task_name}...")
     result = crew.kickoff(inputs=inputs)
-    print(f"✅ Completed {task_name}")
+    print(f"[DONE] {task_name}")
     return result
 
 
 def run_parallel_execution(stock_input):
     """Run financial analysis with parallel execution."""
-    print("🚀 Starting Enhanced Financial Analysis with Parallel Execution...")
+    print("[START] Enhanced Financial Analysis with Parallel Execution...")
 
     # Phase 1: Run financial data gathering and news gathering in parallel
-    print("\n🔄 Phase 1: Running Financial Data & News Gathering in Parallel...")
+    print("\n[PHASE 1] Running Financial Data & News Gathering in Parallel...")
     parallel_start = time.time()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -68,10 +75,10 @@ def run_parallel_execution(stock_input):
 
     parallel_end = time.time()
     parallel_time = parallel_end - parallel_start
-    print(f"✅ Phase 1 completed in {parallel_time:.2f} seconds")
+    print(f"[DONE] Phase 1 completed in {parallel_time:.2f} seconds")
 
     # Phase 2: Run analysis and recommendation sequentially (they depend on Phase 1 results)
-    print("\n🔄 Phase 2: Running Analysis & Recommendation...")
+    print("\n[PHASE 2] Running Analysis & Recommendation...")
     analysis_start = time.time()
 
     # The analysis crew will use the context from the completed tasks
@@ -79,9 +86,24 @@ def run_parallel_execution(stock_input):
 
     analysis_end = time.time()
     analysis_time = analysis_end - analysis_start
-    print(f"✅ Phase 2 completed in {analysis_time:.2f} seconds")
+    print(f"[DONE] Phase 2 completed in {analysis_time:.2f} seconds")
 
     return parallel_time, analysis_time
+
+
+def run_sequential_execution(stock_input):
+    """Run all tasks sequentially (used by API sequential mode)."""
+    print("[START] Standard Financial Analysis with Sequential Execution...")
+    sequential_start = time.time()
+
+    # Run all tasks in sequence: financial data -> news -> analysis -> advice
+    result = sequential_crew.kickoff(inputs=stock_input)
+
+    sequential_end = time.time()
+    sequential_time = sequential_end - sequential_start
+    print(f"[DONE] Sequential execution completed in {sequential_time:.2f} seconds")
+
+    return sequential_time, result
 
 
 def main():
@@ -102,7 +124,7 @@ def main():
     start_time = time.time()
 
     # Scenario: Analyze specified stock
-    print(f"\n📋 Stock Analysis: {args.stock}")
+    print(f"\n[STOCK] Analysis: {args.stock}")
     stock_input = {"stock": args.stock}
 
     parallel_time, analysis_time = run_parallel_execution(stock_input)
@@ -111,26 +133,26 @@ def main():
     end_time = time.time()
     execution_time = end_time - start_time
 
-    print("\n🎉 Financial analysis completed!")
-    print(f"⏱️  Phase 1 (Parallel): {parallel_time:.2f} seconds")
-    print(f"⏱️  Phase 2 (Sequential): {analysis_time:.2f} seconds")
+    print("\n[COMPLETE] Financial analysis completed!")
+    print(f"[TIME] Phase 1 (Parallel): {parallel_time:.2f} seconds")
+    print(f"[TIME] Phase 2 (Sequential): {analysis_time:.2f} seconds")
     print(
-        f"⏱️  Total execution time: {execution_time:.2f} seconds ({execution_time/60:.2f} minutes)"
+        f"[TIME] Total execution time: {execution_time:.2f} seconds ({execution_time/60:.2f} minutes)"
     )
 
     # Show potential time savings
     estimated_sequential_time = parallel_time * 2 + analysis_time
     time_saved = estimated_sequential_time - execution_time
-    print(f"💡 Estimated time saved by parallel execution: {time_saved:.2f} seconds")
+    print(f"[INFO] Estimated time saved by parallel execution: {time_saved:.2f} seconds")
     try:
         percent_saved = (
             (time_saved / estimated_sequential_time) * 100
             if estimated_sequential_time > 0
             else 0
         )
-        print(f"💡 Time saved by parallel execution: {percent_saved:.2f}%")
+        print(f"[INFO] Time saved by parallel execution: {percent_saved:.2f}%")
     except Exception:
-        print("⚠️ Could not calculate time saved in percentage.")
+        print("[WARN] Could not calculate time saved in percentage.")
 
 
 if __name__ == "__main__":

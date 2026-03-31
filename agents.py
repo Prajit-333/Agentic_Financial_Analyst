@@ -17,6 +17,9 @@ llm = LLM(
     model="openai/gpt-4.1-2025-04-14",
     api_key=os.getenv("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1",
+    # Keep output small to fit within current OpenRouter credits.
+    # CrewAI otherwise may request very large token budgets (e.g. 65536).
+    max_tokens=2048,
 )
 
 # Agent for gathering company news and information

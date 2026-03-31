@@ -61,7 +61,7 @@ def start_server(host="0.0.0.0", port=8000, reload=True):
 
 def main():
     """Main function to start the server with checks."""
-    print("🔍 Checking system requirements...")
+    print("Checking system requirements...")
 
     # Check if we're in the right directory
     if not Path("api_server.py").exists():

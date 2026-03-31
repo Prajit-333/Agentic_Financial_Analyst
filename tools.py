@@ -13,7 +13,23 @@ load_dotenv()
 session = requests.Session(impersonate="chrome")
 
 os.environ["EXA_API_KEY"] = os.getenv("EXA_API_KEY")
-exa_search_tool = EXASearchTool()
+# The raw Exa response can be very large (tens of thousands of characters),
+# which easily blows up prompt token limits inside CrewAI.
+exa_search_tool_impl = EXASearchTool()
+
+
+@tool("Search the internet for company news (truncated)")
+def exa_search_tool(search_query: str) -> str:
+    """Search the internet and return a truncated text response.
+
+    Truncation is intentional to keep prompts within OpenRouter/CrewAI limits.
+    """
+    resp = exa_search_tool_impl.run(search_query)
+    s = str(resp)
+    max_chars = 8000
+    if len(s) > max_chars:
+        return s[:max_chars] + "\n...[truncated]"
+    return s
 
 
 # Define Finance Tools

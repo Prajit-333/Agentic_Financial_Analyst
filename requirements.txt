@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+crewai
+crewai-tools
+yfinance
+curl_cffi
+python-dotenv
